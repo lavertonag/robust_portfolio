@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, Optional
 
-def ensure_pd(Sigma: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+def ensure_pd(Sigma: np.ndarray, eps: float = 1e-6) -> np.ndarray: # verifie la positivité d'une matrice de covariance 
     """Make covariance positive definite by jittering the diagonal if needed."""
     Sigma = np.array(Sigma, dtype=float)
     # Try Cholesky; if fails, add eps on diagonal progressively
@@ -19,8 +19,8 @@ def ensure_pd(Sigma: np.ndarray, eps: float = 1e-6) -> np.ndarray:
     w[w < eps] = eps
     return (v * w) @ v.T
 
-def ledoit_wolf_cov(returns: pd.DataFrame) -> np.ndarray:
-    """Ledoit–Wolf shrinkage estimator via scikit-learn (if available)."""
+def ledoit_wolf_cov(returns: pd.DataFrame) -> np.ndarray: #shrinkage Ledoit Wolf
+
     try:
         from sklearn.covariance import LedoitWolf
         lw = LedoitWolf().fit(returns.values)
@@ -30,7 +30,8 @@ def ledoit_wolf_cov(returns: pd.DataFrame) -> np.ndarray:
         return np.cov(returns.values, rowvar=False)
 
 def estimate_mean_cov(returns: pd.DataFrame, use_shrinkage: bool=True) -> Tuple[np.ndarray, np.ndarray]:
-    """Estimate mean vector and covariance matrix from returns DataFrame."""
+    # calcule le vecteur de moyennes et la covariance (shrinkée si demandé), en s’assurant qu’elle est inversible.
+   
     mu = returns.mean().values  # per-period mean
     if use_shrinkage:
         Sigma = ledoit_wolf_cov(returns)
@@ -40,7 +41,9 @@ def estimate_mean_cov(returns: pd.DataFrame, use_shrinkage: bool=True) -> Tuple[
     return mu, Sigma
 
 def garch_vol_forecast(returns: pd.DataFrame, scale: float = 1.0) -> np.ndarray:
-    """Per-asset GARCH(1,1) forecasted sigma for next step. If arch missing, fallback to stdev."""
+    #  propose une prévision de volatilité future GARCH(1,1) par actif, 
+    # avec repli sur l’écart-type si la librairie arch n’est pas disponible.
+
     sigmas = []
     try:
         from arch import arch_model
@@ -59,7 +62,7 @@ def garch_vol_forecast(returns: pd.DataFrame, scale: float = 1.0) -> np.ndarray:
     return scale * np.array(sigmas, dtype=float)
 
 def block_bootstrap_means(returns: pd.DataFrame, B: int = 500, block_size: int = 21, random_state: Optional[int]=42) -> np.ndarray:
-    """Block bootstrap to get distribution of mean returns. Returns array shape (B, n_assets)."""
+    # effectue un bootstrap par blocs sur les rendements pour obtenir une distribution empirique des moyennes.
     rng = np.random.default_rng(random_state)
     X = returns.values
     T, n = X.shape
@@ -75,6 +78,18 @@ def block_bootstrap_means(returns: pd.DataFrame, B: int = 500, block_size: int =
     return means
 
 def covariance_of_mean(returns: pd.DataFrame, B: int = 500, block_size: int = 21) -> np.ndarray:
+    #exploite ce bootstrap pour estimer la covariance de l’estimateur de moyenne, utilisée ensuite par les optimisations robustes.
     samples = block_bootstrap_means(returns, B=B, block_size=block_size)
     cov_mu = np.cov(samples, rowvar=False)
     return ensure_pd(cov_mu)
+
+
+# #rassemble les outils d’estimation statistique utilisés par le backtest.
+
+# ensure_pd garantit qu’une matrice de covariance est bien définie positive en ajoutant un léger “jitter” sur la diagonale ou en corrigeant les valeurs propres.
+# ledoit_wolf_cov implémente le shrinkage Ledoit–Wolf (avec fallback vers la covariance empirique) pour stabiliser l’estimation de covariance.
+# estimate_mean_cov calcule le vecteur de moyennes et la covariance (shrinkée si demandé), en s’assurant qu’elle est inversible.
+# garch_vol_forecast propose une prévision de volatilité future GARCH(1,1) par actif, avec repli sur l’écart-type si la librairie arch n’est pas disponible.
+# block_bootstrap_means effectue un bootstrap par blocs sur les rendements pour obtenir une distribution empirique des moyennes.
+# covariance_of_mean exploite ce bootstrap pour estimer la covariance de l’estimateur de moyenne, utilisée ensuite par les optimisations robustes.
+# En résumé, le module fournit les composantes statistiques nécessaires pour alimenter les solveurs (moyenne/covariance, incertitude) et ajuster les paramètres de risque dans le pipeline de portefeuille. """

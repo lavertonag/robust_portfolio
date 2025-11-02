@@ -12,34 +12,33 @@ def rolling_backtest(
     returns: pd.DataFrame,
     T_train: int = 252,
     T_test: int = 21,
-    lambda_risk: float = 0.05,
-    delta_mult: float = 1.0,
-    rho: float = 1.0,
-    gamma: float = 2.0,
-    use_shrinkage: bool = True,
-    use_garch: bool = True,
+    lambda_risk: float = 0.05, #aversion au risk :  +élevé + déteste le risk 
+    delta_mult: float = 1.0, #incetitude sur les rendements éstimés ( +grand + ca varie)
+    rho: float = 1.0, # coefficient de pénalité pour la stratégie ellipsoïde ; + il est haut, + l’ellipsoid restreint le rendement attendu (incertitude plus sévère).
+    gamma: float = 2.0, # budgeted : Γ : combien de pire actifs à la fois ?
+    use_shrinkage: bool = True, # utilisation ledoit-wolf
+    use_garch: bool = True, 
     strategies: Optional[List[str]] = None,
     verbose: bool = True,
 ) -> Dict[str, Dict[str, pd.DataFrame]]:
-    if strategies is None:
-        strategies = ['markowitz','box','ellipsoid','budgeted']
+    # Force the backtest to always evaluate the four reference strategies
+    strategies = ['markowitz', 'box', 'ellipsoid', 'budgeted']
 
     T, n = returns.shape
     idx = returns.index
 
     # Storage
-    returns_oos = {name: [] for name in strategies}
-    weights_hist = {name: [] for name in strategies}
-    dates_hist = []
+    returns_oos = {name: [] for name in strategies} #accumule le rendement par strat
+    weights_hist = {name: [] for name in strategies}# les poids utilisé par strategies 
+    dates_hist = [] 
 
-    w_prev = {name: np.ones(n)/n for name in strategies}
     t = T_train
     while t + T_test <= T:
         train = returns.iloc[t - T_train:t]
         test = returns.iloc[t:t+T_test]
-        mu, Sigma = estimate_mean_cov(train, use_shrinkage=use_shrinkage)
+        mu, Sigma = estimate_mean_cov(train, use_shrinkage=use_shrinkage)# fournit la moyenne + matrice de covariance estimés 
 
-        # Uncertainty components
+        # renvoie la covariance de l'estimateur de moyenne via bootstrap
         Cov_mu = covariance_of_mean(train, B=300, block_size=min(21, len(train)))  # shape (n,n)
         delta = np.sqrt(np.maximum(np.diag(Cov_mu), 0.0))
         if use_garch:

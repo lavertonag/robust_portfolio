@@ -1,43 +1,51 @@
-# Robust Portfolio Optimization — Project Scaffold
+# Robust Portfolio Optimization - Project Scaffold
 
-This repo provides a minimal, ready-to-run pipeline to compare **Markowitz** vs **Robust** (Box, Ellipsoid, Budgeted) portfolio optimization with **rolling backtests**.
+This repository ships a minimal, ready-to-run pipeline to compare **Markowitz** vs **Robust** (Box, Ellipsoid, Budgeted) portfolio optimization with **rolling backtests**.
 
 ## Quick start
 
 ```bash
-# 1) Create and activate a fresh environment (example with conda)
-conda create -n robust-ptf python=3.10 -y
-conda activate robust-ptf
+# 1) Create and activate a fresh virtual environment (built-in venv)
+python -m venv .venv
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# macOS / Linux
+source .venv/bin/activate
 
 # 2) Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 
 # 3) Run the demo
 python demo.py
 ```
 
-If Yahoo Finance is blocked, place your CSVs in `./data/` named as `{TICKER}.csv` (OHLCV or at least `Date,Adj Close`), and the loader will read from there with `--source csv`.
+If you prefer Conda, you can still create an environment with `conda create -n robust-ptf python=3.10` before installing the requirements.
 
-## Structure
+If Yahoo Finance is blocked, place your CSVs in `./data/` named `{TICKER}.csv` (OHLCV or at least `Date,Adj Close`). The loader will read from there when you pass `--source csv`.
+
+## Project layout
 
 ```
 robust_portfolio/
-  ├─ src/
-  │   ├─ data_loader.py
-  │   ├─ estimators.py
-  │   ├─ optimizers.py
-  │   ├─ backtest.py
-  │   ├─ metrics.py
-  │   ├─ visualization.py
-  │   └─ config.py
-  ├─ notebooks/
-  ├─ demo.py
-  ├─ requirements.txt
-  └─ README.md
+  README.md
+  requirements.txt
+  demo.py
+  src/
+    backtest.py
+    config.py
+    data_loader.py
+    estimators.py
+    metrics.py
+    optimizers.py
+    scenario_analysis.py
+    visualization.py
 ```
 
 ## Notes
 
-- The **GARCH** step is optional; if `arch` isn't installed, the code falls back gracefully.
-- The **Budgeted (Bertsimas–Sim)** model includes a simple convex formulation for long-only portfolios.
-- This scaffold emphasizes clarity and extensibility over micro-optimizations.
+- The **GARCH** step is optional; if `arch` is missing the code falls back gracefully.
+- The **Budgeted (Bertsimas-Sim)** model includes a simple convex formulation for long-only portfolios.
+- This scaffold favors clarity and extensibility over micro-optimizations.

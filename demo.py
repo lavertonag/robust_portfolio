@@ -32,15 +32,15 @@ def main(args):
         strategies=['markowitz','box','ellipsoid','budgeted']
     )
 
-    # Aggregate returns per strategy
+    # Les resultatds du backtest stpockés dans un dataframe ou colonne = strategies + lignes = rendements 
     returns_df = pd.DataFrame({k: v['returns'] for k, v in res.items()})
-    nav = (1 + returns_df).cumprod()
+    nav = (1 + returns_df).cumprod() #capitalisation cumulé (evolution du cpatial initial)
 
     # Visuals
     figures = []
-    fig, _ = plot_cumulative_dual(nav)
+    fig, _ = plot_cumulative_dual(nav) # courbe cumule 
     figures.append(fig)
-    fig, _ = plot_rolling_sharpe_windows(returns_df, windows=(30, 60, 90))
+    fig, _ = plot_rolling_sharpe_windows(returns_df, windows=(30)) # sharpe rolling 
     figures.append(fig)
     fig, _ = plot_return_boxplots(returns_df)
     figures.append(fig)
