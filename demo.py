@@ -10,7 +10,6 @@ from src.metrics import compile_performance_table
 from src.visualization import (
     plot_cumulative_dual,
     plot_rolling_sharpe_windows,
-    plot_return_boxplots,
     plot_return_volatility_scatter,
 )
 
@@ -40,9 +39,7 @@ def main(args):
     figures = []
     fig, _ = plot_cumulative_dual(nav) # courbe cumule 
     figures.append(fig)
-    fig, _ = plot_rolling_sharpe_windows(returns_df, windows=(30)) # sharpe rolling 
-    figures.append(fig)
-    fig, _ = plot_return_boxplots(returns_df)
+    fig, _ = plot_rolling_sharpe_windows(returns_df, windows=(30,)) # sharpe rolling 
     figures.append(fig)
     fig, _ = plot_return_volatility_scatter(returns_df)
     figures.append(fig)

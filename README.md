@@ -5,6 +5,12 @@ This repository ships a minimal, ready-to-run pipeline to compare **Markowitz** 
 ## Quick start
 
 ```bash
+
+#0) Puor moi le lancer 
+Set-ExecutionPolicy -Scope Process Bypass                                  
+ .\.venv\Scripts\Activate.ps1
+
+ 
 # 1) Create and activate a fresh virtual environment (built-in venv)
 python -m venv .venv
 
