@@ -36,62 +36,6 @@ def plot_rolling_sharpe_windows(returns_df: pd.DataFrame, windows=(30, 60, 90)):
     return fig, axes
 
 
-def plot_weights_heatmap(
-    weights_df: pd.DataFrame,
-    title: str = 'Weights over time',
-    resample: str | None = 'M',
-) -> tuple[plt.Figure, plt.Axes]:
-    """
-    Plot a heatmap of portfolio weights (time x assets).
-
-    Resamples to monthly averages by default for readability and sorts assets
-    by their average allocation so the most-used names appear on top.
-    """
-    data = weights_df.copy()
-    if isinstance(data.index, pd.DatetimeIndex) and resample:
-        data = data.resample(resample).mean()
-    order = data.mean(axis=0).sort_values(ascending=False).index
-    data = data[order]
-    fig, ax = plt.subplots(figsize=(13, 6))
-    # Replace exact zeros with NaN so they appear as blank/white when possible.
-    data_to_plot = data.replace(0.0, np.nan).T
-    try:
-        import seaborn as sns  # type: ignore
-        sns.heatmap(
-            data_to_plot,
-            cmap='YlGnBu',
-            cbar_kws={'label': 'Weight'},
-            ax=ax,
-            linewidths=0.1,
-            linecolor='white',
-        )
-    except ImportError:
-        cax = ax.imshow(
-            data_to_plot,
-            aspect='auto',
-            cmap='YlGnBu',
-            origin='lower',
-        )
-        fig.colorbar(cax, ax=ax, label='Weight')
-        ax.set_yticks(range(len(data_to_plot.index)))
-        ax.set_yticklabels(data_to_plot.index)
-    if isinstance(data.index, pd.DatetimeIndex):
-        positions = (
-            np.linspace(0, len(data.index) - 1, num=min(len(data.index), 10), dtype=int)
-            if len(data.index) > 0 else []
-        )
-        if len(positions) > 0:
-            # Heatmap centres are at integer + 0.5
-            ax.set_xticks(positions + 0.5)
-            labels = [data.index[i].strftime('%Y-%m') for i in positions]
-            ax.set_xticklabels(labels, rotation=45, ha='right')
-    ax.set_title(title)
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Assets')
-    plt.tight_layout()
-    return fig, ax
-
-
 def plot_return_boxplots(returns_df: pd.DataFrame):
     """Display boxplots of out-of-sample returns per strategy."""
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -159,7 +103,9 @@ def plot_strategy_weight_bars(
         ax.set_title(name)
         ax.set_ylabel('Weight')
         ax.set_ylim(0, min(1.05, ordered.max() * 1.2 if len(ordered) else 1.0))
-        ax.tick_params(axis='x', rotation=45, ha='right')
+        ax.tick_params(axis='x', rotation=45)
+        for label in ax.get_xticklabels():
+            label.set_horizontalalignment('right')
     fig.suptitle(f'Scenario {scenario_name}: Allocation by strategy', y=1.02, fontsize=13)
     fig.tight_layout()
     return fig, axes
